@@ -31,12 +31,12 @@ data RequestMessage a =
     { jsonrpcRequestMessage :: String
     , idRequestMessage      :: Int
     , methodRequestMessage  :: String
-    , paramsRequestMessage  :: Maybe a
+    , paramsRequestMessage  :: a
     } deriving (Read,Show,Eq)
 
 $(deriveJSON defaultOptions { omitNothingFields = True, fieldLabelModifier = rdrop (length "RequestMessage") } ''RequestMessage)
 
-instance Default (RequestMessage a) where
+instance Default a => Default (RequestMessage a) where
   def = RequestMessage "2.0" def def def
 
 -- ---------------------------------------------------------------------

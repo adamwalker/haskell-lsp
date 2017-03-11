@@ -407,20 +407,17 @@ defaultErrorHandlers origId req = [ E.Handler someExcept ]
 -- |
 --
 initializeRequestHandler :: IO () -> MVar (LanguageContextData a) -> J.InitializeRequest -> IO ()
-initializeRequestHandler dispatcherProc mvarCtx req@(J.RequestMessage _ origId _ mp) =
+initializeRequestHandler dispatcherProc mvarCtx req@(J.RequestMessage _ origId _ params) =
   flip E.catches (defaultErrorHandlers origId req) $ do
 
     ctx <- readMVar mvarCtx
 
-    case mp of
+    modifyMVar_ mvarCtx (\c -> return c { resRootPath = J.rootPathInitializeRequestArguments params})
+    case J.rootPathInitializeRequestArguments params of
       Nothing -> return ()
-      Just params -> do
-        modifyMVar_ mvarCtx (\c -> return c { resRootPath = J.rootPathInitializeRequestArguments params})
-        case J.rootPathInitializeRequestArguments params of
-          Nothing -> return ()
-          Just dir -> do
-            logs $ "initializeRequestHandler: setting current dir to project root:" ++ dir
-            setCurrentDirectory dir
+      Just dir -> do
+        logs $ "initializeRequestHandler: setting current dir to project root:" ++ dir
+        setCurrentDirectory dir
 
     -- Launch the given process once the project root directory has been set
     logs "initializeRequestHandler: calling dispatcherProc"
