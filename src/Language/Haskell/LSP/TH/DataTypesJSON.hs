@@ -148,13 +148,13 @@ data NotificationMessage a =
   NotificationMessage
     { jsonrpcNotificationMessage :: String
     , methodNotificationMessage  :: String
-    , paramsNotificationMessage  :: Maybe a
+    , paramsNotificationMessage  :: a
     } deriving (Read,Show,Eq)
 
 $(deriveJSON defaultOptions { omitNothingFields = True, fieldLabelModifier = rdrop (length "NotificationMessage") } ''NotificationMessage)
 
-instance Default (NotificationMessage a) where
-  def = NotificationMessage "2.0" def Nothing
+instance Default a => Default (NotificationMessage a) where
+  def = NotificationMessage "2.0" def def
 
 -- ---------------------------------------------------------------------
 {-
