@@ -221,7 +221,7 @@ data InitializeCallbacks config =
       -- This callback should return either the parsed configuration data or an error indicating
       -- what went wrong. The parsed configuration object will be stored internally and passed to
       -- hanlder functions as context.
-    , onStartup :: LspFuncs config -> IO (Maybe J.ResponseError)
+    , onStartup :: LspFuncs config -> Maybe J.ProgressToken -> IO (Maybe J.ResponseError)
       -- ^ Once the initial configuration has been received, this callback will be invoked to offer
       -- the language server implementation the chance to create any processes or start new threads
       -- that may be necesary for the server lifecycle.
@@ -731,7 +731,7 @@ defaultErrorHandlers tvarDat origId req = [ E.Handler someExcept ]
 --
 initializeRequestHandler'
   :: (Show config)
-  => (LspFuncs config -> IO (Maybe J.ResponseError))
+  => (LspFuncs config -> Maybe J.ProgressToken -> IO (Maybe J.ResponseError))
   -> Maybe (Handler J.InitializeRequest)
   -> TVar (LanguageContextData config)
   -> J.InitializeRequest
@@ -761,7 +761,7 @@ initializeRequestHandler' onStartup mHandler tvarCtx req@(J.RequestMessage _ ori
 
     let
       getCapabilities :: J.InitializeParams -> C.ClientCapabilities
-      getCapabilities (J.InitializeParams _ _ _ _ c _ _) = c
+      getCapabilities (J.InitializeParams _ _ _ _ c _ _ _) = c
       getLspId tvId = atomically $ do
         cid <- readTVar tvId
         modifyTVar' tvId (+1)
@@ -873,7 +873,7 @@ initializeRequestHandler' onStartup mHandler tvarCtx req@(J.RequestMessage _ ori
 
     ctx <- readTVarIO tvarCtx
 
-    initializationResult <- onStartup lspFuncs
+    initializationResult <- onStartup lspFuncs (params ^. J.workDoneToken)
 
     case initializationResult of
       Just errResp -> do

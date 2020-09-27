@@ -126,6 +126,7 @@ data InitializeParams =
   --
   -- @since 0.7.0.0
   , _workspaceFolders      :: Maybe (List WorkspaceFolder)
+  , _workDoneToken         :: Maybe ProgressToken -- ^ An optional token that a server can use to report work done progress.
   } deriving (Show, Read, Eq)
 
 {-# DEPRECATED _rootPath "Use _rootUri" #-}
